@@ -1,0 +1,1 @@
+RULE = COL_NAMES

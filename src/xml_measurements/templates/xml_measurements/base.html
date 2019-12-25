@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} {% endblock %}</title>
+    {% block style %} {% endblock %}
+</head>
+<body>
+    {% include "xml_measurements/header.html" %}
+    {% block content %} {% endblock %}
+    {% block scripts %} {% endblock %}
+</body>
+</html>

@@ -1,0 +1,9 @@
+{% extends 'xml_measurements/base.html' %}
+
+{% block content %}
+    {% for configuration in object_list %}
+        <li><a href="{% url 'xml_measurements:update_configuration' configuration.pk %}">{{ configuration.name }}</a></li>
+    {% empty %}
+        <li>No configurations yet.</li>
+    {% endfor %}
+{% endblock %}

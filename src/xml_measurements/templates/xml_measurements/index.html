@@ -1,0 +1,71 @@
+{% extends 'xml_measurements/base.html' %}
+{% block title %}
+    index
+{% endblock %}
+
+
+{% block style %}
+<style>
+[id$=DELETE]{
+    display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+    <p>hello</p>
+
+
+    <form method="post">
+        {% csrf_token %}
+        {{ configuration_form }} <br><br>
+
+
+        {{ rule_formset.media }}
+        {% load formset_tags %}
+        <div id="formset" data-formset-prefix="{{ rule_formset.prefix }}">
+            {{ rule_formset.management_form }}
+
+            <div data-formset-body>
+                <!-- New forms will be inserted in here -->
+                {% for form in rule_formset %}
+                    <div data-formset-form>
+                        {{ form }}
+                        <button type="button" data-formset-delete-button>Delete rule</button>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- The empty form template. By wrapping this in a <script> tag, the
+            __prefix__ placeholder can easily be replaced in both attributes and
+            any scripts -->
+            <script type="form-template" data-formset-empty-form>
+                {% escapescript %}
+                    <div data-formset-form>
+                        {{ rule_formset.empty_form }}
+
+                        <button type="button" data-formset-delete-button>Delete rule</button>
+                    </div>
+                {% endescapescript %}
+            </script>
+
+            <!-- This button will add a new form when clicked -->
+            <input type="button" value="Add another" data-formset-add>
+
+            <script>jQuery(function($) {
+                $("#formset").formset({
+                    animateForms: true,
+                });
+            });</script>
+
+        </div>
+        <input type="submit" value="submit">
+    </form>
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+    </script>
+{% endblock %}
+

@@ -1,0 +1,1 @@
+fa validare formular (sa nu fie numele entitatilor egale)
