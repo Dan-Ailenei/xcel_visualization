@@ -71,3 +71,7 @@ def duplicate_configuration(request, pk):
 
     Rule.objects.bulk_create([set_conf(rule) for rule in rules])
     return redirect('xml_measurements:index')
+
+
+def inspect_file_view(request):
+    pass

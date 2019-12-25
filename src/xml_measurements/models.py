@@ -13,3 +13,4 @@ class Rule(models.Model):
     configuration = models.ForeignKey(Configuration, on_delete=models.CASCADE)
     names = models.TextField(max_length=1000)
     rule = models.CharField(max_length=30)
+
