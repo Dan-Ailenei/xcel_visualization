@@ -15,4 +15,3 @@ class RuleForm(forms.ModelForm):
 
 RuleFormset = inlineformset_factory(Configuration, Rule, min_num=1, extra=0, can_delete=True, form=RuleForm)
 ConfigurationForm = modelform_factory(Configuration, fields=('name', 'rules_direction'))
-

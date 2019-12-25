@@ -2,7 +2,11 @@
 
 {% block content %}
     {% for configuration in object_list %}
-        <li><a href="{% url 'xml_measurements:update_configuration' configuration.pk %}">{{ configuration.name }}</a></li>
+        <li>
+            <a href="{% url 'xml_measurements:update_configuration' configuration.pk %}">{{ configuration.name }}</a>
+            <a href="{% url 'xml_measurements:copy_configuration' configuration.pk %}">copy</a>
+            <a href="{% url 'xml_measurements:delete_configuration' configuration.pk %}">delete</a>
+        </li>
     {% empty %}
         <li>No configurations yet.</li>
     {% endfor %}
