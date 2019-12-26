@@ -29,6 +29,7 @@ pytest-django = "*"
 xlrd = "^1.2.0"
 ipython = "^7.10.2"
 django-formset-js = "^0.5.0"
+xlsxwriter = "^1.2.7"
 
 [tool.poetry.dev-dependencies]
 
