@@ -1,6 +1,0 @@
-#!/bin/bash
-
-rm -rf xml_measurements/migrations
-rm db.sqlite3
-./manage.py makemigrations xml_measurements
-./manage.py migrate

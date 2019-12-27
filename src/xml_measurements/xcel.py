@@ -2,27 +2,51 @@ from collections import defaultdict
 
 import xlrd
 import xlsxwriter
-from xml_measurements.exceptions import FileFormatError
+from koala import Spreadsheet
 
 
-def generate_new_xml(book, sheet_num, orientation, rules):
+def generate_new_xml(path, orientation, rules, out_file, sheet_num=0):
     orientation = 0 if orientation == "COL" else 1
-    worksheet_in = book.sheet_by_index(sheet_num)
+
+    worksheet_in, workbook_out, worksheet_out = open_in_and_out(path, sheet_num, out_file)
     rules_coords = extract_rules_coords(worksheet_in, orientation, rules)
 
-    workbook_out = xlsxwriter.Workbook("figure_out_the_name.xlsx")
-    worksheet_out = workbook_out.add_worksheet()
+    write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num)
+    workbook_out.close()
 
-    copy_worksheet(worksheet_in, worksheet_out)
-    write_rules(worksheet_in, worksheet_out, rules_coords, orientation)
-    for (_, rule), coords in rules_coords.items():
-        print(coords[-1])
-        # print(xlrd.cellname(*coords[-1]))
+    _, workbook_out, worksheet_out = open_in_and_out(out_file, 0, out_file)
 
+    cell_format_err = workbook_out.add_format({'bg_color': 'red'})
+    write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num, path=out_file,
+                cell_format_err=cell_format_err)
     workbook_out.close()
 
 
-def write_rules(worksheet_in, worksheet_out, rules_coords, orientation):
+def open_in_and_out(path, sheet_num, path_out):
+    worksheet_in = open_in(path, sheet_num)
+    worksheet_out, workbook_out = create_out(path_out)
+    copy_worksheet(worksheet_in, worksheet_out)
+    return worksheet_in, workbook_out, worksheet_out
+
+
+def create_out(path_out):
+    workbook_out = xlsxwriter.Workbook(path_out)
+    worksheet_out = workbook_out.add_worksheet()
+    return worksheet_out, workbook_out
+
+
+def open_in(path, sheet_num):
+    book = xlrd.open_workbook(path)
+    worksheet_in = book.sheet_by_index(sheet_num)
+
+    return worksheet_in
+
+
+def write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num,
+                path=None, cell_format_err=None):
+    if path:
+        sp = Spreadsheet(path)
+
     orientation = (orientation + 1) % 2
     length = [worksheet_in.nrows, worksheet_in.ncols][orientation]
     for i in range(1, length):
@@ -33,7 +57,19 @@ def write_rules(worksheet_in, worksheet_out, rules_coords, orientation):
                 rule = rule.replace(f'${j + 1}', xl_coord)
             coord = coords[-1]
             coord[orientation] = i
-            worksheet_out.write(*coords[-1], rule)
+
+            if path:
+                to_write = []
+                name = xlrd.cellname(*coord)
+                formula_value = f'{float(sp.cell_evaluate(f"Sheet{sheet_num + 1}!{name}")):.2f}'
+                old_value = f'{float(worksheet_in.cell_value(*coord)):.2f}'
+                print(formula_value, old_value)
+                if formula_value != old_value:
+                    worksheet_out.write_formula(*coord, rule, cell_format=cell_format_err)
+                else:
+                    worksheet_out.write_formula(*coord, rule, value=formula_value)
+            else:
+                worksheet_out.write_formula(*coords[-1], rule)
 
 
 def copy_worksheet(worksheet_in, worksheet_out):
@@ -48,11 +84,7 @@ def extract_rules_coords(sheet, orientation, rules):
     rules_coords = defaultdict(list)
     current_val = sheet.cell(*coord).value
     while True:
-        poz_pk_rule = find_rule_poz_and_pk_rule(rules, current_val)
-        if poz_pk_rule:
-            i, pk, rule = poz_pk_rule
-            rules_coords[(pk, rule)].append((i, [*coord]))
-
+        add_coords_occurences(rules, current_val, rules_coords, coord)
         coord[orientation] += 1
 
         # TODO: better stop condition
@@ -74,30 +106,29 @@ def find_origin(orientation, sheet):
     while not sheet.cell(*origin).value.strip():
         origin[orientation] += 1
         if origin[orientation] > 20:
-            raise FileFormatError("The direction is wrong or an offset is needed")
-
+            # raise FileFormatError("The direction is wrong or an offset is needed")
+            pass
     return origin
 
 
-def find_rule_poz_and_pk_rule(rules, current_val):
+def add_coords_occurences(rules, current_val, rules_coords, coord):
     for rule in rules:
         for i, names in enumerate(rule.names):
             if current_val in names:
-                return i, rule.pk, rule.rule
+                rules_coords[(rule.pk, rule.rule)].append((i, [*coord]))
 
 
-book = xlrd.open_workbook('/Users/dan.ailenei/myprojects/measurements/static_files/media/profesori.xlsx')
+if __name__ == '__main__':
+    class Rule:
+        def __init__(self, names, rule, pk):
+            self.names = names
+            self.rule = rule
+            self.pk = pk
 
 
-class Rule:
-    def __init__(self, names, rule, pk):
-        self.names = names
-        self.rule = rule
-        self.pk = pk
+    rules = [Rule(names="Profesori\nEmail\nVorbit", rule="=sum($1, $2)", pk=1)]
+    for rule in rules:
+        rule.names = [line.split(',') for line in rule.names.splitlines()]
 
-
-rules = [Rule(names="Profesori\nEmail\nVorbit", rule="=sum($1, $2)", pk=1)]
-for rule in rules:
-    rule.names = [line.split(',') for line in rule.names.splitlines()]
-
-print(generate_new_xml(book, 0, "ROW", rules)) # orientation -> (COL, ROW)
+    print(generate_new_xml('/Users/dan.ailenei/myprojects/measurements/static_files/media/profesori.xlsx',
+          "ROW", rules, "figure_out_the_name.xlsx")) # orientation -> (COL, ROW)

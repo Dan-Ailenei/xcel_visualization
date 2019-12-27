@@ -1,11 +1,17 @@
+import os
+import random
+import string
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import model_to_dict
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import ListView, DeleteView
-from xml_measurements.forms import ConfigurationForm, RuleFormset
+from xml_measurements.forms import ConfigurationForm, RuleFormset, UploadXlsxFileForm
 from xml_measurements.models import Configuration, Rule
+from xml_measurements.utils import download
 
 
 def create_update_configuration(request, pk=None):
@@ -74,4 +80,16 @@ def duplicate_configuration(request, pk):
 
 
 def inspect_file_view(request):
-    pass
+    if request.method == 'POST':
+        form = UploadXlsxFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            slug = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
+            with open(os.path.join(settings.MEDIA_ROOT, slug), 'wb+') as f:
+                for chunk in request.FILES['file'].chunks():
+                    f.write(chunk)
+            return download(slug, form.cleaned_data['configuration'].pk, form.cleaned_data['sheet_num'])
+    else:
+        form = UploadXlsxFileForm()
+    conf_count = Configuration.objects.count()
+    return render(request, 'xml_measurements/inspect.html', {'form': form, 'conf_count': conf_count})
+
