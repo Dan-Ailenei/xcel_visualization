@@ -1,5 +1,6 @@
 TODO:
     
+    better visualization of the result
     make sure decimals don't produce errors
     find origin in a more flexible way
     better stop condition when you iterate over cells
