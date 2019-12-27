@@ -8,7 +8,7 @@ from xml_measurements.xcel import generate_new_xml
 
 def prepare_rules(rules):
     for rule in rules:
-        rule.names = [line.split(',') for line in rule.names.splitlines()]
+        rule.names = [[el.strip() for el in line.split(',')] for line in rule.names.splitlines()]
 
 
 def download(slug, conf_pk, sheet_num):
