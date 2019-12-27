@@ -8,30 +8,29 @@ from koala import Spreadsheet
 def generate_new_xml(path, orientation, rules, out_file, sheet_num=0):
     orientation = 0 if orientation == "COL" else 1
 
+    # copy the file first because for some reason the evaluation library is not working without this
     worksheet_in, workbook_out, worksheet_out = open_in_and_out(path, sheet_num, out_file)
-    rules_coords = extract_rules_coords(worksheet_in, orientation, rules)
-
-    write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num)
     workbook_out.close()
 
-    _, workbook_out, worksheet_out = open_in_and_out(out_file, 0, out_file)
+    rules_coords = extract_rules_coords(worksheet_in, orientation, rules)
+    sp = Spreadsheet(out_file)
+    worksheet_in, workbook_out, worksheet_out = open_in_and_out(path, sheet_num, out_file)
 
     cell_format_err = workbook_out.add_format({'bg_color': 'red'})
-    write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num, path=out_file,
-                cell_format_err=cell_format_err)
+    write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num, cell_format_err, sp)
     workbook_out.close()
 
 
 def open_in_and_out(path, sheet_num, path_out):
     worksheet_in = open_in(path, sheet_num)
-    worksheet_out, workbook_out = create_out(path_out)
-    copy_worksheet(worksheet_in, worksheet_out)
+    worksheet_out, workbook_out = create_out(path_out, worksheet_in)
     return worksheet_in, workbook_out, worksheet_out
 
 
-def create_out(path_out):
+def create_out(path_out, worksheet_in):
     workbook_out = xlsxwriter.Workbook(path_out)
     worksheet_out = workbook_out.add_worksheet()
+    copy_worksheet(worksheet_in, worksheet_out)
     return worksheet_out, workbook_out
 
 
@@ -42,34 +41,48 @@ def open_in(path, sheet_num):
     return worksheet_in
 
 
-def write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num,
-                path=None, cell_format_err=None):
-    if path:
-        sp = Spreadsheet(path)
+def compute_formula_value(sp, coord, rule, sheet_num):
+    name = xlrd.cellname(*coord)
+    adress = f"Sheet{sheet_num + 1}!{name}"
+    before_formula_value = sp.cell_evaluate(adress)
+    sp.cell_set_formula(adress, rule)
+    formula_value = sp.cell_evaluate(adress)
+    sp.cell_set_formula(adress, '')
+    sp.cell_set_value(adress, before_formula_value)
 
+    return formula_value
+
+
+def create_xml_rule(coords, orientation, i, rule):
+    for j, coord in enumerate(coords[:-1]):
+        coord[orientation] = i
+        xl_coord = xlrd.cellname(*coord)
+        rule = rule.replace(f'${j + 1}', xl_coord)
+    return rule
+
+
+def write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num, cell_format_err, sp):
     orientation = (orientation + 1) % 2
     length = [worksheet_in.nrows, worksheet_in.ncols][orientation]
     for i in range(1, length):
         for (_, rule), coords in rules_coords.items():
-            for j, coord in enumerate(coords[:-1]):
-                coord[orientation] = i
-                xl_coord = xlrd.cellname(*coord)
-                rule = rule.replace(f'${j + 1}', xl_coord)
+            rule = create_xml_rule(coords, orientation, i, rule)
             coord = coords[-1]
             coord[orientation] = i
 
-            if path:
-                to_write = []
-                name = xlrd.cellname(*coord)
-                formula_value = f'{float(sp.cell_evaluate(f"Sheet{sheet_num + 1}!{name}")):.2f}'
-                old_value = f'{float(worksheet_in.cell_value(*coord)):.2f}'
-                print(formula_value, old_value)
-                if formula_value != old_value:
-                    worksheet_out.write_formula(*coord, rule, cell_format=cell_format_err)
-                else:
-                    worksheet_out.write_formula(*coord, rule, value=formula_value)
+            formula_value = compute_formula_value(sp, coord, rule, sheet_num)
+            old_value = worksheet_in.cell_value(*coord)
+
+            try:
+                formula_value = f'{float(formula_value):.2f}'
+                old_value = f'{float(old_value):.2f}'
+            except ValueError:
+                pass
+
+            if formula_value != old_value:
+                worksheet_out.write_formula(*coord, rule, cell_format=cell_format_err, value=formula_value)
             else:
-                worksheet_out.write_formula(*coords[-1], rule)
+                worksheet_out.write_formula(*coord, rule, value=formula_value)
 
 
 def copy_worksheet(worksheet_in, worksheet_out):

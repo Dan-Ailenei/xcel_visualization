@@ -2,6 +2,8 @@ __pycache__/
 *.py[cod]
 .python-version
 db.sqlite3
+koala/
+static_files/
 
 # test artefacts
 .coverage
