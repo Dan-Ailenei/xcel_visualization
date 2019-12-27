@@ -1,4 +1,6 @@
 import os
+
+import xlrd
 from django.conf import settings
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
