@@ -147,3 +147,6 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {'max_retries': 1}
 
 LOGIN_REDIRECT_URL = "xml_measurements:index"
 LOGOUT_REDIRECT_URL = "xml_measurements:index"
+
+import django_heroku
+django_heroku.settings(locals())
