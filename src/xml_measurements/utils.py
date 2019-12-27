@@ -1,6 +1,4 @@
 import os
-
-import xlrd
 from django.conf import settings
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
@@ -10,7 +8,11 @@ from xml_measurements.xcel import generate_new_xml
 
 def prepare_rules(rules):
     for rule in rules:
-        rule.names = [[el.strip() for el in line.split(',')] for line in rule.names.splitlines()]
+        rule.names = prepare_rule(rule.names)
+
+
+def prepare_rule(rule):
+    return [[el.strip() for el in line.split(',')] for line in rule.splitlines()]
 
 
 def download(slug, conf_pk, sheet_num):

@@ -1,7 +1,6 @@
 import os
 import random
 import string
-
 import xlrd
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -10,6 +9,7 @@ from django.forms import model_to_dict
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import ListView, DeleteView
+from xml_measurements.exceptions import FileFormatError
 from xml_measurements.forms import ConfigurationForm, RuleFormset, UploadXlsxFileForm
 from xml_measurements.models import Configuration, Rule
 from xml_measurements.utils import download
@@ -91,7 +91,7 @@ def inspect_file_view(request):
                     f.write(chunk)
             try:
                 return download(slug, form.cleaned_data['configuration'].pk, form.cleaned_data['sheet_num'])
-            except xlrd.biffh.XLRDError as err:
+            except (xlrd.biffh.XLRDError, FileFormatError) as err:
                 err_msg = str(err)
     else:
         form = UploadXlsxFileForm()
