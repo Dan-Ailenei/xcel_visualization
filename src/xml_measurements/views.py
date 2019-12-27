@@ -2,6 +2,7 @@ import os
 import random
 import string
 
+import xlrd
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -80,6 +81,7 @@ def duplicate_configuration(request, pk):
 
 
 def inspect_file_view(request):
+    err_msg = None
     if request.method == 'POST':
         form = UploadXlsxFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -87,9 +89,14 @@ def inspect_file_view(request):
             with open(os.path.join(settings.MEDIA_ROOT, slug), 'wb+') as f:
                 for chunk in request.FILES['file'].chunks():
                     f.write(chunk)
-            return download(slug, form.cleaned_data['configuration'].pk, form.cleaned_data['sheet_num'])
+            try:
+                return download(slug, form.cleaned_data['configuration'].pk, form.cleaned_data['sheet_num'])
+            except xlrd.biffh.XLRDError as err:
+                err_msg = str(err)
     else:
         form = UploadXlsxFileForm()
     conf_count = Configuration.objects.count()
-    return render(request, 'xml_measurements/inspect.html', {'form': form, 'conf_count': conf_count})
+    return render(request, 'xml_measurements/inspect.html', {'form': form,
+                                                             'conf_count': conf_count,
+                                                             'err_msg': err_msg})
 
