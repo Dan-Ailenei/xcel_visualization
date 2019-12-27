@@ -79,10 +79,8 @@ def write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_nu
             except ValueError:
                 pass
 
-            if formula_value != old_value:
-                worksheet_out.write_formula(*coord, rule, cell_format=cell_format_err, value=formula_value)
-            else:
-                worksheet_out.write_formula(*coord, rule, value=formula_value)
+            cell_format = cell_format_err if formula_value != old_value else None
+            worksheet_out.write(*coord, formula_value, cell_format)
 
 
 def copy_worksheet(worksheet_in, worksheet_out):
