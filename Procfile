@@ -1,1 +1,1 @@
-web: gunicorn src.measurements_project.wsgi --log-file -
+web: cd src && gunicorn measurements_project.wsgi --log-file -
