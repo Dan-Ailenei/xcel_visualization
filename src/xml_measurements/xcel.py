@@ -1,9 +1,7 @@
 from collections import defaultdict
-
 import xlrd
 import xlsxwriter
 from koala import Spreadsheet
-
 from xml_measurements.exceptions import FileFormatError
 
 
@@ -120,7 +118,7 @@ def find_origin(orientation, sheet):
             origin[orientation] = i
             if sheet.cell_value(*origin).strip():
                 return origin
-    raise FileFormatError("please")
+    raise FileFormatError("Content couldn't be found! Is the file empty ?")
 
 
 def add_coords_occurences(rules, current_val, rules_coords, coord):
@@ -128,6 +126,15 @@ def add_coords_occurences(rules, current_val, rules_coords, coord):
         for i, names in enumerate(rule.names):
             if current_val in names:
                 rules_coords[(rule.pk, rule.rule)].append((i, [*coord]))
+
+
+def test_xcel_formula(formula):
+    raise NotImplemented("not yet")
+    sp = Spreadsheet()
+    adress = "Sheet1!A1"
+    sp.cell_add(adress)
+    sp.cell_set_formula(adress, formula)
+    return sp.cell_evaluate(adress)
 
 
 if __name__ == '__main__':
