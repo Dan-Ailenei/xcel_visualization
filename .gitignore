@@ -3,7 +3,7 @@ __pycache__/
 .python-version
 db.sqlite3
 koala/
-static_files/
+static_files
 
 # test artefacts
 .coverage
