@@ -4,6 +4,8 @@ import xlrd
 import xlsxwriter
 from koala import Spreadsheet
 
+from xml_measurements.exceptions import FileFormatError
+
 
 def generate_new_xml(path, orientation, rules, out_file, sheet_num=0):
     orientation = 0 if orientation == "COL" else 1
@@ -91,18 +93,14 @@ def copy_worksheet(worksheet_in, worksheet_out):
 
 def extract_rules_coords(sheet, orientation, rules):
     coord = find_origin(orientation, sheet)
+    length = [sheet.nrows, sheet.ncols][orientation]
 
     rules_coords = defaultdict(list)
-    current_val = sheet.cell(*coord).value
-    while True:
-        add_coords_occurences(rules, current_val, rules_coords, coord)
-        coord[orientation] += 1
 
-        # TODO: better stop condition
-        try:
-            current_val = sheet.cell(*coord).value
-        except IndexError:
-            break
+    for i in range(coord[orientation], length):
+        coord[orientation] = i
+        current_val = sheet.cell_value(*coord)
+        add_coords_occurences(rules, current_val, rules_coords, coord)
 
     for coords in rules_coords.values():
         coords.sort()
@@ -114,12 +112,15 @@ def extract_rules_coords(sheet, orientation, rules):
 
 def find_origin(orientation, sheet):
     origin = [0, 0]
-    while not sheet.cell(*origin).value.strip():
-        origin[orientation] += 1
-        if origin[orientation] > 20:
-            # raise FileFormatError("The direction is wrong or an offset is needed")
-            pass
-    return origin
+    length_or = [sheet.nrows, sheet.ncols][orientation]
+    length_nor = [sheet.nrows, sheet.ncols][(orientation + 1) % 2]
+
+    for i in range(length_nor):
+        for j in range(length_or):
+            origin[orientation] = i
+            if sheet.cell_value(*origin).strip():
+                return origin
+    raise FileFormatError("please")
 
 
 def add_coords_occurences(rules, current_val, rules_coords, coord):
