@@ -30,13 +30,12 @@ class RuleForm(forms.ModelForm):
 
         rule = self.cleaned_data.get('rule', '')
         match = re.match(r'=(.*)\(.+\)', rule)
-        err = ValidationError("")
         if match:
             f_name = match.group(1)
             if f_name.upper() not in FORMULAE and f_name:
-                raise err
+                raise ValidationError(f"{f_name} is not a valid function name")
         else:
-            raise err
+            raise ValidationError(f"{rule} is not a valid rule")
 
 
 RuleFormset = inlineformset_factory(Configuration, Rule, min_num=1, extra=0, can_delete=True, form=RuleForm)
