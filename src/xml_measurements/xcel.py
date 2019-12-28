@@ -54,7 +54,7 @@ def compute_formula_value(sp, coord, rule, sheet_num):
     sp.cell_set_formula(adress, '')
     sp.cell_set_value(adress, before_formula_value)
 
-    return formula_value
+    return formula_value, before_formula_value
 
 
 def create_xml_rule(coords, orientation, i, rule):
@@ -74,8 +74,7 @@ def write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_nu
             coord = coords[-1]
             coord[orientation] = i
 
-            formula_value = compute_formula_value(sp, coord, rule, sheet_num)
-            old_value = worksheet_in.cell_value(*coord)
+            formula_value, old_value = compute_formula_value(sp, coord, rule, sheet_num)
 
             try:
                 formula_value = f'{float(formula_value):.2f}'

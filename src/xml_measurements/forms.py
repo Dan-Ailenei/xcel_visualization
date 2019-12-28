@@ -1,14 +1,10 @@
-import os
 import re
-
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms import modelform_factory, inlineformset_factory
 from django import forms
 from xml_measurements.models import Rule, Configuration
 from djangoformsetjs.utils import formset_media_js
 from xml_measurements.utils import prepare_rule
-from xml_measurements.xcel import generate_new_xml, FakeRule
 from openpyxl.utils import FORMULAE
 
 
@@ -28,6 +24,7 @@ class RuleForm(forms.ModelForm):
                     if j != i and name in names_set[j]:
                         raise ValidationError("You are using the same name for 2 cells in the same rule")
 
+        # TODO: we should do some validation to evaluate the formulas, but I have no idea how
         rule = self.cleaned_data.get('rule', '')
         match = re.match(r'=(.*)\(.+\)', rule)
         if match:
