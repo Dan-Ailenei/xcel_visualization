@@ -15,11 +15,9 @@ def prepare_rule(rule):
     return [[el.strip() for el in line.split(',')] for line in rule.splitlines()]
 
 
-def download(slug, conf_pk, sheet_num):
+def download(slug, conf, sheet_num):
     file_path = os.path.join(settings.MEDIA_ROOT, slug)
     if os.path.exists(file_path):
-        conf = get_object_or_404(Configuration, pk=conf_pk)
-
         rules = conf.rule_set.all()
         prepare_rules(rules)
         out_path = f'{file_path}_out.xlsx'

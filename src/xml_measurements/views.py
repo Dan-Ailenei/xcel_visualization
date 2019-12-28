@@ -82,6 +82,9 @@ def duplicate_configuration(request, pk):
 
 def inspect_file_view(request):
     err_msg = None
+    err_url = None
+    conf = None
+
     if request.method == 'POST':
         form = UploadXlsxFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -89,16 +92,21 @@ def inspect_file_view(request):
             with open(os.path.join(settings.MEDIA_ROOT, slug), 'wb+') as f:
                 for chunk in request.FILES['file'].chunks():
                     f.write(chunk)
+            conf = form.cleaned_data['configuration']
             try:
-                return download(slug, form.cleaned_data['configuration'].pk, form.cleaned_data['sheet_num'])
+                return download(slug, conf, form.cleaned_data['sheet_num'])
             except (xlrd.biffh.XLRDError, FileFormatError) as err:
                 err_msg = str(err)
             except Exception:
                 err_msg = "Your configuration formula is broken"
+                err_url = True
     else:
         form = UploadXlsxFileForm()
+
     conf_count = Configuration.objects.count()
     return render(request, 'xml_measurements/inspect.html', {'form': form,
                                                              'conf_count': conf_count,
-                                                             'err_msg': err_msg})
+                                                             'err_msg': err_msg,
+                                                             'err_url': err_url,
+                                                             'conf': conf})
 

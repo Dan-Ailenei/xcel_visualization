@@ -8,7 +8,12 @@
             <input type="submit" value="submit">
         </form>
         <div>
-            {% if err_msg %}{{ err_msg }}{% endif %}
+            {% if err_msg %}
+                {{ err_msg }}
+                {% if err_url %}
+                    <a href="{% url 'xml_measurements:update_configuration' conf.pk %}">Click here to update your configuration</a>
+                {% endif %}
+            {% endif %}
         </div>
     {% else %}
         <p>You need to define a configuration first</p>
