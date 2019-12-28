@@ -148,5 +148,7 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {'max_retries': 1}
 LOGIN_REDIRECT_URL = "xml_measurements:index"
 LOGOUT_REDIRECT_URL = "xml_measurements:index"
 
+TMP_FILE = os.path.join(MEDIA_ROOT, 'test_tmp.xlsx')
+
 import django_heroku
 django_heroku.settings(locals())

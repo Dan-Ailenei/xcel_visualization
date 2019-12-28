@@ -1,9 +1,13 @@
+import os
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms import modelform_factory, inlineformset_factory
 from django import forms
 from xml_measurements.models import Rule, Configuration
 from djangoformsetjs.utils import formset_media_js
 from xml_measurements.utils import prepare_rule
+from xml_measurements.xcel import generate_new_xml, FakeRule
 
 
 class RuleForm(forms.ModelForm):
@@ -21,6 +25,17 @@ class RuleForm(forms.ModelForm):
                 for j in range(len(names_set)):
                     if j != i and name in names_set[j]:
                         raise ValidationError("You are using the same name for 2 cells in the same rule")
+
+        # TODO: this validation is bullshit, change it
+        in_file = settings.TMP_FILE
+        out = f'{settings.TMP_FILE[:-5]}_out'
+        rules = [FakeRule(names=names_set, rule=self.cleaned_data['rule'], pk=1)]
+        try:
+            generate_new_xml(in_file, "COL", rules, out, 0)
+        except Exception as ex:
+            raise ValidationError("The rule is not xcel valid or is not supported")
+        finally:
+            os.remove(out)
 
 
 RuleFormset = inlineformset_factory(Configuration, Rule, min_num=1, extra=0, can_delete=True, form=RuleForm)

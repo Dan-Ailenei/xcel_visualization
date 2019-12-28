@@ -138,15 +138,15 @@ def sheet_iterator(sheet):
             yield sheet.cell_value(i, j)
 
 
+class FakeRule:
+    def __init__(self, names, rule, pk):
+        self.names = names
+        self.rule = rule
+        self.pk = pk
+
+
 if __name__ == '__main__':
-    class Rule:
-        def __init__(self, names, rule, pk):
-            self.names = names
-            self.rule = rule
-            self.pk = pk
-
-
-    rules = [Rule(names="Profesori\nEmail\nVorbit", rule="=count($1:$2)", pk=1)]
+    rules = [FakeRule(names="Profesori\nEmail\nVorbit", rule="=count($1:$2)", pk=1)]
     for rule in rules:
         rule.names = [line.split(',') for line in rule.names.splitlines()]
 
