@@ -20,6 +20,10 @@ def generate_new_xml(path, orientation, rules, out_file, sheet_num=0):
     write_rules(worksheet_in, worksheet_out, rules_coords, orientation, sheet_num, cell_format_err, sp)
     workbook_out.close()
 
+    # TODO: use this when you make better UI
+    # for val in sheet_iterator(open_in(out_file, sheet_num)):
+    #     print(val)
+
 
 def open_in_and_out(path, sheet_num, path_out):
     worksheet_in = open_in(path, sheet_num)
@@ -128,13 +132,10 @@ def add_coords_occurences(rules, current_val, rules_coords, coord):
                 rules_coords[(rule.pk, rule.rule)].append((i, [*coord]))
 
 
-def test_xcel_formula(formula):
-    raise NotImplemented("not yet")
-    sp = Spreadsheet()
-    adress = "Sheet1!A1"
-    sp.cell_add(adress)
-    sp.cell_set_formula(adress, formula)
-    return sp.cell_evaluate(adress)
+def sheet_iterator(sheet):
+    for i in range(sheet.nrows):
+        for j in range(sheet.ncols):
+            yield sheet.cell_value(i, j)
 
 
 if __name__ == '__main__':
@@ -145,7 +146,7 @@ if __name__ == '__main__':
             self.pk = pk
 
 
-    rules = [Rule(names="Profesori\nEmail\nVorbit", rule="=sum($1, $2)", pk=1)]
+    rules = [Rule(names="Profesori\nEmail\nVorbit", rule="=count($1:$2)", pk=1)]
     for rule in rules:
         rule.names = [line.split(',') for line in rule.names.splitlines()]
 
