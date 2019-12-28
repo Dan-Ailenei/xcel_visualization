@@ -38,17 +38,6 @@ class RuleForm(forms.ModelForm):
         else:
             raise err
 
-        # TODO: this validation is bullshit, should we remove it ?
-        in_file = settings.TMP_FILE
-        out = f'{settings.TMP_FILE[:-5]}_out'
-        rules = [FakeRule(names=names_set, rule=rule, pk=1)]
-        try:
-            generate_new_xml(in_file, "COL", rules, out, 0)
-        except Exception as ex:
-            raise ValidationError("The rule is not xcel valid or is not supported")
-        finally:
-            os.remove(out)
-
 
 RuleFormset = inlineformset_factory(Configuration, Rule, min_num=1, extra=0, can_delete=True, form=RuleForm)
 ConfigurationForm = modelform_factory(Configuration, fields=('name', 'rules_direction'))

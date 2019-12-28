@@ -91,7 +91,7 @@ def inspect_file_view(request):
                     f.write(chunk)
             try:
                 return download(slug, form.cleaned_data['configuration'].pk, form.cleaned_data['sheet_num'])
-            except (xlrd.biffh.XLRDError, FileFormatError) as err:
+            except Exception as err:
                 err_msg = str(err)
     else:
         form = UploadXlsxFileForm()
