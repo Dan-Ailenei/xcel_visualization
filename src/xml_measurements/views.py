@@ -91,8 +91,10 @@ def inspect_file_view(request):
                     f.write(chunk)
             try:
                 return download(slug, form.cleaned_data['configuration'].pk, form.cleaned_data['sheet_num'])
-            except Exception as err:
+            except (xlrd.biffh.XLRDError, FileFormatError) as err:
                 err_msg = str(err)
+            except Exception:
+                err_msg = "Your configuration formula is broken"
     else:
         form = UploadXlsxFileForm()
     conf_count = Configuration.objects.count()
